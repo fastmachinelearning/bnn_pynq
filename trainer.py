@@ -33,9 +33,9 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import MNIST, CIFAR10
 
-from .logger import Logger, TrainingEpochMeters, EvalEpochMeters
-from .models import model_with_cfg
-from .models.losses import SqrHingeLoss
+from logger import Logger, TrainingEpochMeters, EvalEpochMeters
+from models import model_with_cfg
+from models.losses import SqrHingeLoss
 
 
 class MirrorMNIST(MNIST):

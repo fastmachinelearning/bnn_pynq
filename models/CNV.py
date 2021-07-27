@@ -127,7 +127,7 @@ def cnv(cfg):
               cnv_out_ch_pool=cnv_out_ch_pool,
               int_fc_feat=int_fc_feat,
               last_fc_in_feat=last_fc_in_feat,
-	      pool_size=pool_size,
+              pool_size=pool_size,
               kern_size=kern_size)
     return net
 
