@@ -47,12 +47,36 @@ BREVITAS_JIT=1 brevitas_bnn_pynq_train --evaluate --network LFC_1W1A --resume /p
 
 ## Determined AI
 
+First log in with port `8080`:
+```bash
+ssh -L 8080:localhost:8080 <USERNAME>@prp-gpu-1.t2.ucsd.edu
+```
+
+Install a conda environment with `determined` (first time):
+```bash
+conda create python=3.6 -n determined
+conda activate determined
+pip install determined
+```
+
+Activate conda environment (each time):
+```bash
+conda activate determined
+```
+
 Launch cluster
 ```bash
 det deploy local cluster-up
 ```
 
-Run experiment (with constant parameters):
+Navigate browser to http://localhost:8080/; log in with `determined` username, empty password.
+
+Run a single experiment (with constant parameters):
 ```bash
 det -m 'localhost' experiment create const.yaml .
+```
+
+Shutdown cluster when done:
+```bash
+det deploy local cluster-down
 ```
