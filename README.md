@@ -44,3 +44,45 @@ To evaluate your own checkpoint, of e.g. LFC_1W1A, run:
  ```bash
 BREVITAS_JIT=1 brevitas_bnn_pynq_train --evaluate --network LFC_1W1A --resume /path/to/checkpoint.tar
  ```
+
+## Determined AI
+
+First log in with port `8080`:
+```bash
+ssh -L 8080:localhost:8080 <USERNAME>@prp-gpu-1.t2.ucsd.edu
+```
+
+Install a conda environment with `determined` (first time):
+```bash
+conda create python=3.6 -n determined
+conda activate determined
+pip install determined
+```
+
+Check out this repo (first time):
+```bash
+git clone https://github.com/jmduarte/bnn_pynq
+```
+
+Activate conda environment and enter repo (each time):
+```bash
+conda activate determined
+cd bnn_pynq
+```
+
+Launch cluster
+```bash
+det deploy local cluster-up
+```
+
+Navigate browser to http://localhost:8080/; log in with `determined` username, empty password.
+
+Run a single experiment (with constant parameters):
+```bash
+det -m 'localhost' experiment create const.yaml .
+```
+
+Shutdown cluster when done:
+```bash
+det deploy local cluster-down
+```

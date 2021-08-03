@@ -1,0 +1,6 @@
+experiments
+__pycache__
+*pyc
+cfg
+*~
+data
