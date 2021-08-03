@@ -44,3 +44,15 @@ To evaluate your own checkpoint, of e.g. LFC_1W1A, run:
  ```bash
 BREVITAS_JIT=1 brevitas_bnn_pynq_train --evaluate --network LFC_1W1A --resume /path/to/checkpoint.tar
  ```
+
+## Determined AI
+
+Launch cluster
+```bash
+det deploy local cluster-up
+```
+
+Run experiment (with constant parameters):
+```bash
+det -m 'localhost' experiment create const.yaml .
+```
