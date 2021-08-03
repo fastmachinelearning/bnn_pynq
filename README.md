@@ -59,7 +59,7 @@ conda activate determined
 pip install determined
 ```
 
-Check out and enter this repo (first time):
+Check out this repo (first time):
 ```bash
 git clone https://github.com/jmduarte/bnn_pynq
 ```
