@@ -59,9 +59,15 @@ conda activate determined
 pip install determined
 ```
 
-Activate conda environment (each time):
+Check out and enter this repo (first time):
+```bash
+git clone https://github.com/jmduarte/bnn_pynq
+```
+
+Activate conda environment and enter repo (each time):
 ```bash
 conda activate determined
+cd bnn_pynq
 ```
 
 Launch cluster
