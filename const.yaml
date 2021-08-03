@@ -37,6 +37,3 @@ environment:
 checkpoint_storage:
   type: shared_fs
   host_path: /scratch/data/determined
-bind_mounts:
-  type: shared_fs
-  host_path: /scratch/data/jduarte
