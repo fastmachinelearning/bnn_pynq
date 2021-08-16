@@ -13,6 +13,7 @@ from torchvision import transforms
 from torch.nn import functional as F
 
 from determined.pytorch import DataLoader, PyTorchTrial, PyTorchTrialContext
+from determined import InvalidHP
 
 from models.CNV import CNV
 from models.losses import SqrHingeLoss
@@ -43,22 +44,23 @@ class CIFARTrial(PyTorchTrial):
         # other when doing distributed training.
         self.download_directory = tempfile.mkdtemp()
 
-        net = CNV(weight_bit_width=self.context.get_hparam("weight_bit_width"),
-                  act_bit_width=self.context.get_hparam("act_bit_width"),
-                  in_bit_width=IN_BIT_WIDTH,
-                  num_classes=NUM_CLASSES,
-                  in_ch=NUM_CHANNELS,
-                  cnv_out_ch_pool=[(self.context.get_hparam("cnv_out_ch_0"), self.context.get_hparam("cnv_pool_0")),
-                                   (self.context.get_hparam("cnv_out_ch_1"), self.context.get_hparam("cnv_pool_1")),
-                                   (self.context.get_hparam("cnv_out_ch_2"), self.context.get_hparam("cnv_pool_2")),
-                                   (self.context.get_hparam("cnv_out_ch_3"), self.context.get_hparam("cnv_pool_3")),
-                                   (self.context.get_hparam("cnv_out_ch_4"), self.context.get_hparam("cnv_pool_4")),
-                                   (self.context.get_hparam("cnv_out_ch_5"), self.context.get_hparam("cnv_pool_5"))],
-                  int_fc_feat=[(self.context.get_hparam("int_fc_feat_0"), self.context.get_hparam("int_fc_feat_1")),
-                               (self.context.get_hparam("int_fc_feat_1"), self.context.get_hparam("int_fc_feat_2"))],
-                  last_fc_in_feat=self.context.get_hparam("last_fc_in_feat"),
-                  pool_size=self.context.get_hparam("pool_size"),
-                  kern_size=self.context.get_hparam("kern_size"))
+        try: 
+            net = CNV(weight_bit_width=self.context.get_hparam("weight_bit_width"),
+                      act_bit_width=self.context.get_hparam("act_bit_width"),
+                      in_bit_width=IN_BIT_WIDTH,
+                      num_classes=NUM_CLASSES,
+                      in_ch=NUM_CHANNELS,
+                      cnv_out_ch_pool=[(self.context.get_hparam("cnv_out_ch_0"), self.context.get_hparam("cnv_pool_0")),
+                                       (self.context.get_hparam("cnv_out_ch_1"), self.context.get_hparam("cnv_pool_1")),
+                                       (self.context.get_hparam("cnv_out_ch_2"), self.context.get_hparam("cnv_pool_2")),
+                                       (self.context.get_hparam("cnv_out_ch_3"), self.context.get_hparam("cnv_pool_3")),
+                                       (self.context.get_hparam("cnv_out_ch_4"), self.context.get_hparam("cnv_pool_4")),
+                                       (self.context.get_hparam("cnv_out_ch_5"), self.context.get_hparam("cnv_pool_5"))],
+                      int_fc_feat=[(self.context.get_hparam("int_fc_feat_1"), self.context.get_hparam("int_fc_feat_2"))],
+                      pool_size=self.context.get_hparam("pool_size"),
+                      kern_size=self.context.get_hparam("kern_size"))
+        except: 
+            raise InvalidHP
 
         self.model = self.context.wrap_model(net)
 

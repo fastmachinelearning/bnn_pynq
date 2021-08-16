@@ -32,7 +32,7 @@ from .common import CommonWeightQuant, CommonActQuant
 class CNV(Module):
 
     def __init__(self, num_classes, weight_bit_width, act_bit_width, in_bit_width, in_ch,
-                 cnv_out_ch_pool, int_fc_feat, last_fc_in_feat, pool_size, kern_size):
+                 cnv_out_ch_pool, int_fc_feat, pool_size, kern_size):
         super(CNV, self).__init__()
 
         self.conv_features = ModuleList()
@@ -62,6 +62,15 @@ class CNV(Module):
             if is_pool_enabled:
                 self.conv_features.append(MaxPool2d(kernel_size=pool_size))
 
+        # do shape inference for dummy input (need min. batch=2)
+        x = torch.zeros(size=(2, 3, 32, 32))
+        for mod in self.conv_features:
+            x = mod(x)
+        x = x.view(x.shape[0], -1)
+        in_features = x.shape[-1]
+        out_features = int_fc_feat[0][0]
+        int_fc_feat.insert(0, (in_features, out_features))
+
         for in_features, out_features in int_fc_feat:
             self.linear_features.append(QuantLinear(
                 in_features=in_features,
@@ -75,7 +84,7 @@ class CNV(Module):
                 bit_width=act_bit_width))
 
         self.linear_features.append(QuantLinear(
-            in_features=last_fc_in_feat,
+            in_features=int_fc_feat[-1][1],
             out_features=num_classes,
             bias=False,
             weight_quant=CommonWeightQuant,
@@ -115,7 +124,6 @@ def cnv(cfg):
     int_fc_feat = cfg.get('MODEL', 'INTERMEDIATE_FC_FEATURES')
     cnv_out_ch_pool = [eval(pair) for pair in cnv_out_ch_pool.split('\n')]
     int_fc_feat = [eval(pair) for pair in int_fc_feat.split('\n')]
-    last_fc_in_feat = cfg.getint('MODEL', 'LAST_FC_IN_FEATURES')
     pool_size = cfg.getint('MODEL', 'POOL_SIZE')
     kern_size = cfg.getint('MODEL', 'KERNEL_SIZE')
 
@@ -126,7 +134,6 @@ def cnv(cfg):
               in_ch=in_channels,
               cnv_out_ch_pool=cnv_out_ch_pool,
               int_fc_feat=int_fc_feat,
-              last_fc_in_feat=last_fc_in_feat,
               pool_size=pool_size,
               kern_size=kern_size)
     return net
