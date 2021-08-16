@@ -23,6 +23,10 @@ hyperparameters:
   pool_size: 2
   kern_size: 3
   global_batch_size: 100
+profiling:
+  enabled: true
+  begin_on_batch: 0
+  end_after_batch: 32000
 records_per_epoch: 50000
 searcher:
   name: single
