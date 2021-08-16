@@ -1,0 +1,147 @@
+name: cifar10_pytorch_adaptive_search
+hyperparameters:
+  learning_rate:
+    type: log
+    minval: -3
+    maxval: 0
+    base: 10.0
+  learning_rate_decay: 0
+  cnv_out_ch_0: 
+    type: categorical
+    vals:
+      - 32
+      - 64
+      - 128
+      - 256  
+      - 512
+  cnv_pool_0: 
+    type: categorical
+    vals: 
+      - True
+      - False
+  cnv_out_ch_1:     
+    type: categorical
+    vals:
+      - 32
+      - 64
+      - 128
+      - 256  
+      - 512
+  cnv_pool_1: 
+    type: categorical
+    vals:
+      - True
+      - False
+  cnv_out_ch_2: 
+    type: categorical
+    vals:
+      - 32
+      - 64
+      - 128
+      - 256  
+      - 512
+  cnv_pool_2: 
+    type: categorical
+    vals:
+      - True
+      - False
+  cnv_out_ch_3: 
+    type: categorical
+    vals:
+      - 32
+      - 64
+      - 128
+      - 256  
+      - 512
+  cnv_pool_3: 
+    type: categorical
+    vals:
+      - True
+      - False
+  cnv_out_ch_4: 
+    type: categorical
+    vals:
+      - 32
+      - 64
+      - 128
+      - 256  
+      - 512
+  cnv_pool_4: 
+    type: categorical
+    vals:
+      - True
+      - False
+  cnv_out_ch_5: 
+    type: categorical
+    vals:
+      - 32
+      - 64
+      - 128
+      - 256  
+      - 512
+  cnv_pool_5: 
+    type: categorical
+    vals:
+      - True
+      - False
+  int_fc_feat_1: 
+    type: categorical
+    vals:
+      - 16
+      - 32
+      - 64
+      - 128
+      - 256  
+      - 512
+  int_fc_feat_2: 
+    type: categorical
+    vals:
+      - 16
+      - 32
+      - 64
+      - 128
+      - 256  
+      - 512
+  weight_bit_width: 
+    type: categorical
+    vals:
+      - 1
+      - 2
+      - 4
+  act_bit_width: 
+    type: categorical
+    vals:
+      - 1
+      - 2
+      - 4
+  pool_size: 
+    type: categorical
+    vals: 
+      - 2
+      - 4
+  kern_size: 
+    type: categorical 
+    vals:
+      - 1
+      - 2
+      - 3
+      - 4
+  global_batch_size: 100
+records_per_epoch: 50000
+searcher:
+  name: adaptive_asha
+  metric: validation_error
+  max_length:
+    epochs: 32
+  max_trials: 16
+entrypoint: model_def:CIFARTrial
+min_validation_period:
+  epochs: 1
+environment:
+  image: "determinedai/environments:cuda-11.0-pytorch-1.7-lightning-1.2-tf-2.4-gpu-0.16.0"
+checkpoint_storage:
+  type: shared_fs
+  host_path: /scratch/data/determined
+resources:
+  slots_per_trial: 1
+  max_slots: 2
