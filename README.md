@@ -70,19 +70,7 @@ conda activate determined
 cd bnn_pynq
 ```
 
-Launch cluster
-```bash
-det deploy local cluster-up
-```
-
-Navigate browser to http://localhost:8080/; log in with `determined` username, empty password.
-
 Run a single experiment (with constant parameters):
 ```bash
 det -m 'localhost' experiment create const.yaml .
-```
-
-Shutdown cluster when done:
-```bash
-det deploy local cluster-down
 ```
