@@ -133,7 +133,7 @@ searcher:
   metric: validation_error
   max_length:
     epochs: 32
-  max_trials: 16
+  max_trials: 500
 entrypoint: model_def:CIFARTrial
 min_validation_period:
   epochs: 1
