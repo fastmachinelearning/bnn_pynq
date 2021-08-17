@@ -38,7 +38,7 @@ environment:
   image: "determinedai/environments:cuda-11.0-pytorch-1.7-lightning-1.2-tf-2.4-gpu-0.16.0"
 checkpoint_storage:
   type: shared_fs
-  host_path: /scratch/data/determined
+  host_path: /xilinx/scratch/determined
 resources:
   slots_per_trial: 1
   max_slots: 1
