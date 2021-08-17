@@ -70,6 +70,11 @@ conda activate determined
 cd bnn_pynq
 ```
 
+Log in with your username and password
+```bash
+det user login $USER
+```
+
 Run a single experiment (with constant parameters):
 ```bash
 det -m 'localhost' experiment create const.yaml .
