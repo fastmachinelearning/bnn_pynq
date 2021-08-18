@@ -17,6 +17,7 @@ from determined import InvalidHP
 
 from models.CNV import CNV
 from models.losses import SqrHingeLoss
+from models.bops_counter import calc_BOPS
 
 # Constants about the data set.
 IMAGE_SIZE = 32
@@ -71,6 +72,11 @@ class CIFARTrial(PyTorchTrial):
         ))
 
         self.criterion = SqrHingeLoss()
+        
+        try:
+            bops = calc_BOPS(self.model)
+        except:
+            raise
 
     def train_batch(
         self, batch: TorchData, epoch_idx: int, batch_idx: int
