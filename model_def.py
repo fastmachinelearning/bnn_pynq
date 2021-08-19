@@ -72,11 +72,6 @@ class CIFARTrial(PyTorchTrial):
         ))
 
         self.criterion = SqrHingeLoss()
-        
-        try:
-            bops = calc_BOPS(self.model)
-        except:
-            raise
 
     def train_batch(
         self, batch: TorchData, epoch_idx: int, batch_idx: int
@@ -91,10 +86,12 @@ class CIFARTrial(PyTorchTrial):
         loss = self.criterion(output, labels_onehot)
 
         accuracy = accuracy_rate(output, labels)
+        
+        bops = calc_BOPS(self.model)
 
         self.context.backward(loss)
         self.context.step_optimizer(self.optimizer)
-        return {"loss": loss, "train_error": 1.0 - accuracy, "train_accuracy": accuracy}
+        return {"BOPs": bops, "loss": loss, "train_error": 1.0 - accuracy, "train_accuracy": accuracy}
 
     def evaluate_batch(self, batch: TorchData) -> Dict[str, Any]:
         """
