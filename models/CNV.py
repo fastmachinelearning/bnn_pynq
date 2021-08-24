@@ -32,7 +32,7 @@ from .common import CommonWeightQuant, CommonActQuant
 class CNV(Module):
 
     def __init__(self, num_classes, weight_bit_width, act_bit_width, in_bit_width, in_ch,
-                 cnv_out_ch_pool, int_fc_feat, pool_size, kern_size):
+                 cnv_out_ch_stride_pool, int_fc_feat, pool_size, kern_size):
         super(CNV, self).__init__()
 
         self.conv_features = ModuleList()
@@ -46,11 +46,12 @@ class CNV(Module):
             narrow_range=False,
             restrict_scaling_type=RestrictValueType.POWER_OF_TWO))
 
-        for out_ch, is_pool_enabled in cnv_out_ch_pool:
+        for out_ch, stride, is_pool_enabled in cnv_out_ch_stride_pool:
             self.conv_features.append(QuantConv2d(
                 kernel_size=kern_size,
                 in_channels=in_ch,
                 out_channels=out_ch,
+                stride=stride,
                 bias=False,
                 weight_quant=CommonWeightQuant,
                 weight_bit_width=weight_bit_width))
@@ -120,9 +121,9 @@ def cnv(cfg):
     in_bit_width = cfg.getint('QUANT', 'IN_BIT_WIDTH')
     num_classes = cfg.getint('MODEL', 'NUM_CLASSES')
     in_channels = cfg.getint('MODEL', 'IN_CHANNELS')
-    cnv_out_ch_pool = cfg.get('MODEL', 'CNV_OUT_CH_POOL')
+    cnv_out_ch_stride_pool = cfg.get('MODEL', 'CNV_OUT_CH_STRIDE_POOL')
     int_fc_feat = cfg.get('MODEL', 'INTERMEDIATE_FC_FEATURES')
-    cnv_out_ch_pool = [eval(pair) for pair in cnv_out_ch_pool.split('\n')]
+    cnv_out_ch_stride_pool = [eval(triplet) for triplet in cnv_out_ch_stride_pool.split('\n')]
     int_fc_feat = [eval(pair) for pair in int_fc_feat.split('\n')]
     pool_size = cfg.getint('MODEL', 'POOL_SIZE')
     kern_size = cfg.getint('MODEL', 'KERNEL_SIZE')
@@ -132,7 +133,7 @@ def cnv(cfg):
               in_bit_width=in_bit_width,
               num_classes=num_classes,
               in_ch=in_channels,
-              cnv_out_ch_pool=cnv_out_ch_pool,
+              cnv_out_ch_stride_pool=cnv_out_ch_stride_pool,
               int_fc_feat=int_fc_feat,
               pool_size=pool_size,
               kern_size=kern_size)
