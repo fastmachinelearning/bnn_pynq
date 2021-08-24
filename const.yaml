@@ -3,16 +3,22 @@ hyperparameters:
   learning_rate: 0.02
   learning_rate_decay: 0
   cnv_out_ch_0: 64
+  cnv_stride_0: 1
   cnv_pool_0: False
   cnv_out_ch_1: 64
+  cnv_stride_1: 1
   cnv_pool_1: True
   cnv_out_ch_2: 128
+  cnv_stride_2: 1
   cnv_pool_2: False
   cnv_out_ch_3: 128
+  cnv_stride_3: 1
   cnv_pool_3: True
   cnv_out_ch_4: 256
+  cnv_stride_4: 1
   cnv_pool_4: False
   cnv_out_ch_5: 256
+  cnv_stride_5: 1
   cnv_pool_5: False
   int_fc_feat_1: 512
   int_fc_feat_2: 512
@@ -30,7 +36,7 @@ searcher:
   name: single
   metric: validation_error
   max_length:
-    epochs: 32
+    epochs: 100
 entrypoint: model_def:CIFARTrial
 min_validation_period:
   epochs: 1
