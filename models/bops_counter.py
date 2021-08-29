@@ -30,14 +30,17 @@ def calc_BOPS(model, input_data_precision=32):
             #b_w = module.quant_weight_bit_width #Dont think this is a property I can access sadly, going with precision as given set in model
             n = module.in_features
             m = module.out_features
+            if isinstance(module, torch.nn.Linear) or isinstance(
             total = l_total[name+'.weight'] + l_total[name+'.bias']
             alive = l_alive[name + '.weight'] + l_alive[name + '.bias']
             p = 1 - ((total - alive) / total)  # fraction of layer remaining
             #assuming b_a is the output bitwidth of the last layer
             #module_BOPS = m*n*p*(b_a*b_w + b_a + b_w + math.log2(n))
-            module_BOPS = m * n * (p * b_a * b_w + b_a + b_w + math.log2(n))
-            print("{} BOPS: {} = {}*{}({}*{}*{} + {} + {} + {})".format(name,module_BOPS,m,n,p,b_a,b_w,b_a,b_w,math.log2(n)))
+            module_BOPS = m * n * k * k * (p * b_a * b_w + b_a + b_w + math.log2(n*k*k))
+            print("{} BOPS: {} = {}*{}*{}({}*{}*{} + {} + {} + {})".format(name, module_BOPS, m, n, k*k, p, b_a, b_w, b_a, b_w, math.log2(n*k*k)))
             last_bit_width = b_w
             total_BOPS += module_BOPS
-    print("Total BOPS: {}".format(total_BOPS))
+    scientific_notation = "{:.2e}".format(total_BOPS)
+    print("Total BOPS: {} = {}".format(total_BOPS, scientific_notation))
+    
     return total_BOPS
