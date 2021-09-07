@@ -25,7 +25,7 @@ def calc_BOPS(model, input_data_precision=32):
     b_w = model.weight_precision if hasattr(model, 'weight_precision') else 32
     total_BOPS = 0
     for name, module in model.named_modules():
-        if isinstance(module, torch.nn.Linear) or isinstance(module, qnn.QuantLinear):
+        if isinstance(module, torch.nn.Linear) or isinstance(module, qnn.QuantLinear) or isinstance(module, torch.nn.Conv2d) or isinstance(module, qnn.QuantConv2d):
             b_a = last_bit_width
             #b_w = module.quant_weight_bit_width #Dont think this is a property I can access sadly, going with precision as given set in model
             n = module.in_features
@@ -34,6 +34,7 @@ def calc_BOPS(model, input_data_precision=32):
             total = l_total[name+'.weight'] + l_total[name+'.bias']
             alive = l_alive[name + '.weight'] + l_alive[name + '.bias']
             p = 1 - ((total - alive) / total)  # fraction of layer remaining
+            if isiunstance
             #assuming b_a is the output bitwidth of the last layer
             #module_BOPS = m*n*p*(b_a*b_w + b_a + b_w + math.log2(n))
             module_BOPS = m * n * k * k * (p * b_a * b_w + b_a + b_w + math.log2(n*k*k))
