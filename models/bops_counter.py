@@ -33,10 +33,8 @@ def calc_BOPS(model, input_data_precision=32):
             #m = module.out_channels
             n = module.in_features
             m = module.out_features
-            if isinstance(module, torch.nn.Conv2d) or isinstance(module, qnn.QuantConv2d):
-                k = module.kernel_size
-            else:
-                k = 1
+            #if isinstance(module, torch.nn.Conv2d) or isinstance(module, qnn.QuantConv2d):
+            k = module.kernel_size
             total = l_total[name+'.weight'] + l_total[name+'.bias']
             alive = l_alive[name + '.weight'] + l_alive[name + '.bias']
             p = 1 - ((total - alive) / total)  # fraction of layer remaining
