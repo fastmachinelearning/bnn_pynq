@@ -28,12 +28,11 @@ def calc_BOPS(model, input_data_precision=32):
         if isinstance(module, torch.nn.Linear) or isinstance(module, qnn.QuantLinear) or isinstance(module, torch.nn.Conv2d) or isinstance(module, qnn.QuantConv2d):
             b_a = last_bit_width
             #b_w = module.quant_weight_bit_width #Dont think this is a property I can access sadly, going with precision as given set in model
-            if isinstance(module, qnn.QuantConv2d):
-                n = module.in_channels
-                m = module.out_channels
-            else:
-                n = module.in_features
-                m = module.out_features
+            #if isinstance(module, qnn.QuantConv2d):
+            #n = module.in_channels
+            #m = module.out_channels
+            n = module.in_features
+            m = module.out_features
             if isinstance(module, torch.nn.Conv2d) or isinstance(module, qnn.QuantConv2d):
                 k = module.kernel_size
             else:
