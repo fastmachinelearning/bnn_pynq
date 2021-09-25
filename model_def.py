@@ -76,6 +76,9 @@ class CIFARTrial(PyTorchTrial):
             raise InvalidHP
 
         self.model = self.context.wrap_model(net)
+        
+        print("In __init__()")
+        print(self.model)
 
         self.optimizer = self.context.wrap_optimizer(torch.optim.Adam(
             self.model.parameters(),
