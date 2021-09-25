@@ -98,7 +98,7 @@ class CIFARTrial(PyTorchTrial):
         loss = self.criterion(output, labels_onehot)
 
         accuracy = accuracy_rate(output, labels)
-        
+        print("In train_batch()")
         bops = calc_BOPS(self.model)
 
         self.context.backward(loss)
