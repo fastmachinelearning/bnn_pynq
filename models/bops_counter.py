@@ -4,6 +4,7 @@ import brevitas.nn as qnn
 import math
 
 def countNonZeroWeights(model):
+    print("In countNonZeroWeights")
     nonzero = total = 0
     layer_count_alive = {}
     layer_count_total = {}
@@ -21,6 +22,7 @@ def countNonZeroWeights(model):
     return nonzero, total, layer_count_alive, layer_count_total
 
 def calc_BOPS(model, input_data_precision=32):
+    print("calc_BOPS")
     last_bit_width = input_data_precision
     alive, total, l_alive, l_total = countNonZeroWeights(model)
     b_w = model.weight_precision if hasattr(model, 'weight_precision') else 32
