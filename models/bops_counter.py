@@ -8,8 +8,11 @@ def countNonZeroWeights(model):
     nonzero = total = 0
     layer_count_alive = {}
     layer_count_total = {}
+    print(model.named_parameters())
+    print("starting loop")
     for name, p in model.named_parameters():
-        print(name + ", " + p)
+        print(name)
+        print(p)
         tensor = p.data.cpu().numpy()
         nz_count = np.count_nonzero(tensor)
         total_params = np.prod(tensor.shape)
