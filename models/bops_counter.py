@@ -13,6 +13,12 @@ def countNonZeroWeights(model):
     for name, p in model.named_parameters():
         print(name)
         print(p)
+        p_list = module.get_weights()
+        for idx, p in enumerate(p_list):
+            if idx == 0:
+                curr_name = name + ".weight"
+            elif idx == 1:
+                curr_name = name + ".bias"
         tensor = p.data.cpu().numpy()
         nz_count = np.count_nonzero(tensor)
         total_params = np.prod(tensor.shape)
