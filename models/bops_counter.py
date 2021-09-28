@@ -11,22 +11,21 @@ def countNonZeroWeights(model):
     print(model.named_parameters())
     print("starting loop")
     for name, p in model.named_parameters():
-        print(name)
-        print(p)
-        p_list = module.get_weights()
-        for idx, p in enumerate(p_list):
-            if idx == 0:
-                curr_name = name + ".weight"
-            elif idx == 1:
-                curr_name = name + ".bias"
-        tensor = p.data.cpu().numpy()
-        nz_count = np.count_nonzero(tensor)
-        total_params = np.prod(tensor.shape)
-        layer_count_alive.update({name: nz_count})
-        layer_count_total.update({name: total_params})
-        nonzero += nz_count
-        total += total_params
-        print(f'{name:20} | nonzeros = {nz_count:7} / {total_params:7} ({100 * nz_count / total_params:6.2f}%) | total_pruned = {total_params - nz_count :7} | shape = {tensor.shape}')
+        for module in model.layers:
+            p_list = module.get_weights()
+            for idx, p in enumerate(p_list):
+                if idx == 0:
+                    curr_name = name + ".weight"
+                elif idx == 1:
+                    curr_name = name + ".bias"
+                tensor = p.data.cpu().numpy()
+                nz_count = np.count_nonzero(tensor)
+                total_params = np.prod(tensor.shape)
+                layer_count_alive.update({name: nz_count})
+                layer_count_total.update({name: total_params})
+                nonzero += nz_count
+                total += total_params
+                print(f'{name:20} | nonzeros = {nz_count:7} / {total_params:7} ({100 * nz_count / total_params:6.2f}%) | total_pruned = {total_params - nz_count :7} | shape = {tensor.shape}')
     print(f'alive: {nonzero}, pruned : {total - nonzero}, total: {total}, Compression rate : {total/nonzero:10.2f}x  ({100 * (total-nonzero) / total:6.2f}% pruned)')
     print(layer_count_total)
     return nonzero, total, layer_count_alive, layer_count_total
