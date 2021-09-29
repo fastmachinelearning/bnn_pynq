@@ -9,21 +9,15 @@ def countNonZeroWeights(model):
     layer_count_alive = {}
     layer_count_total = {}
     print("starting loop")
-    for name, p, module in model.named_parameters():
-        p_list = module.get_weights()
-        for idx, p in enumerate(p_list):
-            if idx == 0:
-                curr_name = name + ".weight"
-            elif idx == 1:
-                curr_name = name + ".bias"
-            tensor = p.data.cpu().numpy()
-            nz_count = np.count_nonzero(tensor)
-            total_params = np.prod(tensor.shape)
-            layer_count_alive.update({name: nz_count})
-            layer_count_total.update({name: total_params})
-            nonzero += nz_count
-            total += total_params
-            print(f'{name:20} | nonzeros = {nz_count:7} / {total_params:7} ({100 * nz_count / total_params:6.2f}%) | total_pruned = {total_params - nz_count :7} | shape = {tensor.shape}')
+    for name, p in model.named_parameters():
+        tensor = p.data.cpu().numpy()
+        nz_count = np.count_nonzero(tensor)
+        total_params = np.prod(tensor.shape)
+        layer_count_alive.update({name: nz_count})
+        layer_count_total.update({name: total_params})
+        nonzero += nz_count
+        total += total_params
+        print(f'{name:20} | nonzeros = {nz_count:7} / {total_params:7} ({100 * nz_count / total_params:6.2f}%) | total_pruned = {total_params - nz_count :7} | shape = {tensor.shape}')
     print(f'alive: {nonzero}, pruned : {total - nonzero}, total: {total}, Compression rate : {total/nonzero:10.2f}x  ({100 * (total-nonzero) / total:6.2f}% pruned)')
     print(layer_count_total)
     return nonzero, total, layer_count_alive, layer_count_total
@@ -48,6 +42,10 @@ def calc_BOPS(model, input_data_precision=32):
                 k = module.kernel_size
             else:
                 k = 1
+            total_weight_exists = l_total.get(name + '.weight')
+            total_bias_exists = l_total.get(name + '.bias')
+            alive_weight_exists = l_alive.get(name + '.weight')
+            alive_bias_exists = 
             total = l_total[name+'.weight'] + l_total[name+'.bias']
             alive = l_alive[name + '.weight'] + l_alive[name + '.bias']
             p = 1 - ((total - alive) / total)  # fraction of layer remaining
