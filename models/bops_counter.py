@@ -45,8 +45,13 @@ def calc_BOPS(model, input_data_precision=32):
             total_weight_exists = l_total.get(name + '.weight')
             total_bias_exists = l_total.get(name + '.bias')
             alive_weight_exists = l_alive.get(name + '.weight')
-            alive_bias_exists = 
-            total = l_total[name+'.weight'] + l_total[name+'.bias']
+            alive_bias_exists = l_alive.get(name + '.bias')
+            if total_weight_exists and total_bias_exists:
+                 total = l_total[name+'.weight'] + l_total[name+'.bias']
+            #total = l_total[name+'.weight'] + l_total[name+'.bias']
+            else:
+                total = 1
+            
             alive = l_alive[name + '.weight'] + l_alive[name + '.bias']
             p = 1 - ((total - alive) / total)  # fraction of layer remaining
             #assuming b_a is the output bitwidth of the last layer
