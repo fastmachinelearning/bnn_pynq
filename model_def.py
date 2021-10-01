@@ -7,6 +7,7 @@ import tempfile
 from typing import Any, Dict, Sequence, Tuple, Union, cast
 
 import json
+import onnx
 import torch
 import torchvision
 from torch import nn
