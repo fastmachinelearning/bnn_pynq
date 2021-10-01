@@ -51,8 +51,11 @@ def calc_BOPS(model, input_data_precision=32):
             #total = l_total[name+'.weight'] + l_total[name+'.bias']
             else:
                 total = 1
-            
-            alive = l_alive[name + '.weight'] + l_alive[name + '.bias']
+            if alive_weight_exists and alive_bias_exists:
+                alive = l_alive[name + '.weight'] + l_alive[name + '.bias']
+            else:
+                alive = 1
+            #alive = l_alive[name + '.weight'] + l_alive[name + '.bias']
             p = 1 - ((total - alive) / total)  # fraction of layer remaining
             #assuming b_a is the output bitwidth of the last layer
             #module_BOPS = m*n*p*(b_a*b_w + b_a + b_w + math.log2(n))
