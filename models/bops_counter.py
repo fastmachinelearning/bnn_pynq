@@ -50,6 +50,18 @@ def calc_BOPS(model, input_data_precision=32):
                 p = 0
             #assuming b_a is the output bitwidth of the last layer
             #module_BOPS = m*n*p*(b_a*b_w + b_a + b_w + math.log2(n))
+            print(m)
+            print(type(m))
+            print(n)
+            print(type(n))
+            print(k)
+            print(type(k))
+            print(p)
+            print(type(p))
+            print(b_a)
+            print(type(b_a))
+            print(b_w)
+            print(type(b_w))
             module_BOPS = m * n * k * k * (p * b_a * b_w + b_a + b_w + math.log2(n*k*k))
             print("{} BOPS: {} = {}*{}*{}({}*{}*{} + {} + {} + {})".format(name, module_BOPS, m, n, k*k, p, b_a, b_w, b_a, b_w, math.log2(n*k*k)))
             last_bit_width = b_w
