@@ -39,7 +39,7 @@ def calc_BOPS(model, input_data_precision=32):
                 n = module.in_features
                 m = module.out_features
             if isinstance(module, torch.nn.Conv2d) or isinstance(module, qnn.QuantConv2d):
-                k = module.kernel_size
+                k = np.prod(module.kernel_size)
             else:
                 k = 1
             try:
