@@ -6,8 +6,6 @@ https://github.com/fchollet/keras/blob/master/examples/cifar10_cnn.py
 import tempfile
 from typing import Any, Dict, Sequence, Tuple, Union, cast
 
-import json
-import onnx
 import torch
 import torchvision
 from torch import nn
@@ -19,10 +17,10 @@ from determined import InvalidHP
 
 from models.CNV import CNV
 from models.losses import SqrHingeLoss
-#from models.bops_counter import calc_BOPS
+from models.bops_counter import calc_BOPS
 
-from brevitas.export.onnx.generic.manager import BrevitasONNXManager
-from finn.util.inference_cost import inference_cost
+#from brevitas.export.onnx.generic.manager import BrevitasONNXManager
+#from finn.util.inference_cost import inference_cost
 
 # Constants about the data set.
 IMAGE_SIZE = 32
@@ -107,20 +105,20 @@ class CIFARTrial(PyTorchTrial):
 
         accuracy = accuracy_rate(output, labels)
         print("In train_batch()")
-        #bops = calc_BOPS(self.model)
+        bops = calc_BOPS(self.model)
 
         self.context.backward(loss)
         self.context.step_optimizer(self.optimizer)
         
-        export_onnx_path = "models/model_export.onnx"
-        final_onnx_path = "models/model_final.onnx"
-        cost_dict_path = "models/model_cost.json"
+        #export_onnx_path = "models/model_export.onnx"
+        #final_onnx_path = "models/model_final.onnx"
+        #cost_dict_path = "models/model_cost.json"
         
-        BrevitasONNXManager.export(self.model.cpu(), input_t=torch.randn(1, 2, 1024), export_path=export_onnx_path);
-        inference_cost(export_onnx_path, output_json=cost_dict_path, output_onnx=final_onnx_path,
-               preprocess=True, discount_sparsity=True)
-        inference_cost_dict = json.loads(inference_cost)
-        return {"BOPs": inference_cost_dict["total_bops"], "loss": loss, "train_error": 1.0 - accuracy, "train_accuracy": accuracy}
+        #BrevitasONNXManager.export(self.model.cpu(), input_t=torch.randn(1, 2, 1024), export_path=export_onnx_path);
+        #inference_cost(export_onnx_path, output_json=cost_dict_path, output_onnx=final_onnx_path,
+               #preprocess=True, discount_sparsity=True)
+        #inference_cost_dict = json.loads(inference_cost)
+        return {"BOPs": bops, "loss": loss, "train_error": 1.0 - accuracy, "train_accuracy": accuracy}
 
     def evaluate_batch(self, batch: TorchData) -> Dict[str, Any]:
         """
