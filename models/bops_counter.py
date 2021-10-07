@@ -42,9 +42,12 @@ def calc_BOPS(model, input_data_precision=32):
                 k = module.kernel_size
             else:
                 k = 1
-            total = l_total[name+'.weight'] + l_total[name+'.bias']
-            alive = l_alive[name + '.weight'] + l_alive[name + '.bias']
-            p = 1 - ((total - alive) / total)  # fraction of layer remaining
+            try:
+                total = l_total[name+'.weight'] + l_total[name+'.bias']
+                alive = l_alive[name + '.weight'] + l_alive[name + '.bias']
+                p = 1 - ((total - alive) / total)  # fraction of layer remaining
+            except KeyError:
+                p = 0
             #assuming b_a is the output bitwidth of the last layer
             #module_BOPS = m*n*p*(b_a*b_w + b_a + b_w + math.log2(n))
             module_BOPS = m * n * k * k * (p * b_a * b_w + b_a + b_w + math.log2(n*k*k))
