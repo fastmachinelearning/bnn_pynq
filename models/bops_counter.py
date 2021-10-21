@@ -8,7 +8,7 @@ def countNonZeroWeights(model):
     nonzero = total = 0
     layer_count_alive = {}
     layer_count_total = {}
-    print("starting loop")
+    #print("starting loop")
     for name, p in model.named_parameters():
         tensor = p.data.cpu().numpy()
         nz_count = np.count_nonzero(tensor)
@@ -19,11 +19,11 @@ def countNonZeroWeights(model):
         total += total_params
         print(f'{name:20} | nonzeros = {nz_count:7} / {total_params:7} ({100 * nz_count / total_params:6.2f}%) | total_pruned = {total_params - nz_count :7} | shape = {tensor.shape}')
     print(f'alive: {nonzero}, pruned : {total - nonzero}, total: {total}, Compression rate : {total/nonzero:10.2f}x  ({100 * (total-nonzero) / total:6.2f}% pruned)')
-    print(layer_count_total)
+    #print(layer_count_total)
     return nonzero, total, layer_count_alive, layer_count_total
 
 def calc_BOPS(model, input_data_precision=32):
-    print("calc_BOPS")
+    #print("calc_BOPS")
     last_bit_width = input_data_precision
     alive, total, l_alive, l_total = countNonZeroWeights(model)
     b_w = model.weight_precision if hasattr(model, 'weight_precision') else 32
@@ -50,18 +50,18 @@ def calc_BOPS(model, input_data_precision=32):
                 p = 0
             #assuming b_a is the output bitwidth of the last layer
             #module_BOPS = m*n*p*(b_a*b_w + b_a + b_w + math.log2(n))
-            print(m)
-            print(type(m))
-            print(n)
-            print(type(n))
-            print(k)
-            print(type(k))
-            print(p)
-            print(type(p))
-            print(b_a)
-            print(type(b_a))
-            print(b_w)
-            print(type(b_w))
+            #print(m)
+            #print(type(m))
+            #print(n)
+            #print(type(n))
+            #print(k)
+            #print(type(k))
+            #print(p)
+            #print(type(p))
+            #print(b_a)
+            #print(type(b_a))
+            #print(b_w)
+            #print(type(b_w))
             module_BOPS = m * n * k * k * (p * b_a * b_w + b_a + b_w + math.log2(n*k*k))
             print("{} BOPS: {} = {}*{}*{}({}*{}*{} + {} + {} + {})".format(name, module_BOPS, m, n, k*k, p, b_a, b_w, b_a, b_w, math.log2(n*k*k)))
             last_bit_width = b_w
