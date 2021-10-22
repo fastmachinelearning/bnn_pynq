@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 import torch
+import torch.nn as nn
 from torch.nn import Module, ModuleList, BatchNorm2d, MaxPool2d, BatchNorm1d
 
 from brevitas.nn import QuantConv2d, QuantIdentity, QuantLinear
