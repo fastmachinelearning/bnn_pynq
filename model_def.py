@@ -130,7 +130,9 @@ class CIFARTrial(PyTorchTrial):
 
         output = self.model(data)
         accuracy = accuracy_rate(output, labels)
-        return {"validation_accuracy": accuracy, "validation_error": 1.0 - accuracy}
+        validation_result = {"validation_accuracy": accuracy, "validation_error": 1.0 - accuracy}
+        validation_result.update(self.model_cost)
+        return validation_result
 
     def build_training_data_loader(self) -> Any:
         train_transforms_list = [transforms.RandomCrop(32, padding=4),
