@@ -81,9 +81,6 @@ class CIFARTrial(PyTorchTrial):
 
         self.model_cost = net.calculate_model_cost()
         self.model = self.context.wrap_model(net)
-        
-        print("In __init__()")
-        print(self.model)
 
         self.optimizer = self.context.wrap_optimizer(torch.optim.Adam(
             self.model.parameters(),
@@ -106,8 +103,6 @@ class CIFARTrial(PyTorchTrial):
         loss = self.criterion(output, labels_onehot)
 
         accuracy = accuracy_rate(output, labels)
-        print("In train_batch()")
-        #bops = calc_BOPS(self.model)
 
         self.context.backward(loss)
         self.context.step_optimizer(self.optimizer)
