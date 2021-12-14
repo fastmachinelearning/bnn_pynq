@@ -111,8 +111,13 @@ class CIFARTrial(PyTorchTrial):
         data, labels = batch
 
         output = self.model(data)
+
+        labels_onehot = F.one_hot(labels, num_classes=NUM_CLASSES)
+        labels_onehot.masked_fill_(labels_onehot == 0, -1)
+        loss = self.criterion(output, labels_onehot)
+
         accuracy = accuracy_rate(output, labels)
-        return {"validation_accuracy": accuracy, "validation_error": 1.0 - accuracy}
+        return {"validation_loss": loss, "validation_accuracy": accuracy, "validation_error": 1.0 - accuracy}
 
     def build_training_data_loader(self) -> Any:
         train_transforms_list = [transforms.RandomCrop(32, padding=4),
@@ -129,5 +134,32 @@ class CIFARTrial(PyTorchTrial):
         valset = torchvision.datasets.CIFAR10(
             root=self.download_directory, train=False, download=True, transform=transform
         )
+
+        return DataLoader(valset, batch_size=self.context.get_per_slot_batch_size())
+
+    # rename this to build_validation_data_loader to use subset as valdiation
+    def build_partial_validation_data_loader(self) -> Any:
+        import pandas as pd
+        import os
+        import numpy as np
+
+        # load partial dataset from energyrunner
+        data_path = 'energyrunner/datasets/ic01'
+        df = pd.read_csv(os.path.join(data_path,'y_labels.csv'),
+                         names=['file_name', 'num_classes', 'label'])
+        X_test = np.zeros((len(df), 32, 32, 3))
+        y_test = np.zeros((len(df)))
+        for i, (file_name, label) in enumerate(zip(df['file_name'], df['label'])):
+            with open(os.path.join(data_path,file_name),'rb') as f:
+                image_bytes = f.read()
+                data = np.frombuffer(image_bytes,np.uint8).reshape(32, 32, 3)
+                X_test[i, :, :, :] = data
+                y_test[i] = label
+        X_test = np.moveaxis(X_test, -1, 1)/255.
+        X_test = torch.Tensor(X_test)
+        y_test = torch.Tensor(y_test)
+
+        # create dataset and dataloaders
+        valset = torch.utils.data.TensorDataset(X_test, y_test)
 
         return DataLoader(valset, batch_size=self.context.get_per_slot_batch_size())
