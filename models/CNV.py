@@ -42,6 +42,7 @@ class CNV(Module):
 
         self.conv_features = ModuleList()
         self.linear_features = ModuleList()
+        self._model_cost = None
 
         self.conv_features.append(QuantIdentity( # for Q1.7 input format
             act_quant=CommonActQuant,
@@ -100,20 +101,6 @@ class CNV(Module):
         for m in self.modules():
           if isinstance(m, QuantConv2d) or isinstance(m, QuantLinear):
             torch.nn.init.uniform_(m.weight.data, -1, 1)
-        
-        available_models = {
-            "MLP": MLP,
-            "QMLP": QMLP,
-            "RNN": RNN,
-            "CNN": CNN,
-            "QCNN": QCNN,
-            "DS-CNN": DS_CNN,
-        }
-        
-        nn_class = available_models[self.hparams['nn_to_train']]
-        unwrapped_model = nn_class(self.hparams, self.in_features_shape)
-        # Calculate the models cost in advance
-        self.model_cost = unwrapped_model.calculate_model_cost()
         
     def clip_weights(self, min_val, max_val):
         for mod in self.conv_features:
