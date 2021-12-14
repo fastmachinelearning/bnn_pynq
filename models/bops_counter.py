@@ -4,7 +4,6 @@ import brevitas.nn as qnn
 import math
 
 def countNonZeroWeights(model):
-    print("In countNonZeroWeights")
     nonzero = total = 0
     layer_count_alive = {}
     layer_count_total = {}
@@ -23,7 +22,6 @@ def countNonZeroWeights(model):
     return nonzero, total, layer_count_alive, layer_count_total
 
 def calc_BOPS(model, input_data_precision=32):
-    #print("calc_BOPS")
     last_bit_width = input_data_precision
     alive, total, l_alive, l_total = countNonZeroWeights(model)
     b_w = model.weight_precision if hasattr(model, 'weight_precision') else 32
@@ -49,19 +47,6 @@ def calc_BOPS(model, input_data_precision=32):
             except KeyError:
                 p = 0
             #assuming b_a is the output bitwidth of the last layer
-            #module_BOPS = m*n*p*(b_a*b_w + b_a + b_w + math.log2(n))
-            #print(m)
-            #print(type(m))
-            #print(n)
-            #print(type(n))
-            #print(k)
-            #print(type(k))
-            #print(p)
-            #print(type(p))
-            #print(b_a)
-            #print(type(b_a))
-            #print(b_w)
-            #print(type(b_w))
             module_BOPS = m * n * k * k * (p * b_a * b_w + b_a + b_w + math.log2(n*k*k))
             print("{} BOPS: {} = {}*{}*{}({}*{}*{} + {} + {} + {})".format(name, module_BOPS, m, n, k*k, p, b_a, b_w, b_a, b_w, math.log2(n*k*k)))
             last_bit_width = b_w
