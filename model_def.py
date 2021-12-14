@@ -19,8 +19,8 @@ from models.CNV import CNV
 from models.losses import SqrHingeLoss
 from models.bops_counter import calc_BOPS
 
-#from brevitas.export.onnx.generic.manager import BrevitasONNXManager
-#from finn.util.inference_cost import inference_cost
+from brevitas.export.onnx.generic.manager import BrevitasONNXManager
+from finn.util.inference_cost import inference_cost
 
 # Constants about the data set.
 IMAGE_SIZE = 32
@@ -48,6 +48,7 @@ class CIFARTrial(PyTorchTrial):
         # other when doing distributed training.
         self.download_directory = tempfile.mkdtemp()
 
+        # unwrap the model
         try: 
             net = CNV(weight_bit_width=self.context.get_hparam("weight_bit_width"),
                       act_bit_width=self.context.get_hparam("act_bit_width"),
@@ -78,6 +79,7 @@ class CIFARTrial(PyTorchTrial):
         except: 
             raise InvalidHP
 
+        self.model_cost = net.calculate_model_cost()
         self.model = self.context.wrap_model(net)
         
         print("In __init__()")
@@ -105,7 +107,7 @@ class CIFARTrial(PyTorchTrial):
 
         accuracy = accuracy_rate(output, labels)
         print("In train_batch()")
-        bops = calc_BOPS(self.model)
+        #bops = calc_BOPS(self.model)
 
         self.context.backward(loss)
         self.context.step_optimizer(self.optimizer)
@@ -118,7 +120,7 @@ class CIFARTrial(PyTorchTrial):
         #inference_cost(export_onnx_path, output_json=cost_dict_path, output_onnx=final_onnx_path,
                #preprocess=True, discount_sparsity=True)
         #inference_cost_dict = json.loads(inference_cost)
-        return {"BOPs": bops, "loss": loss, "train_error": 1.0 - accuracy, "train_accuracy": accuracy}
+        return {"loss": loss, "train_error": 1.0 - accuracy, "train_accuracy": accuracy}
 
     def evaluate_batch(self, batch: TorchData) -> Dict[str, Any]:
         """
@@ -129,8 +131,9 @@ class CIFARTrial(PyTorchTrial):
         data, labels = batch
 
         output = self.model(data)
+        bops = calc_BOPS(self.model)
         accuracy = accuracy_rate(output, labels)
-        validation_result = {"validation_accuracy": accuracy, "validation_error": 1.0 - accuracy}
+        validation_result = {"BOPS": bops, "validation_accuracy": accuracy, "validation_error": 1.0 - accuracy}
         validation_result.update(self.model_cost)
         return validation_result
 
