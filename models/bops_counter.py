@@ -16,8 +16,8 @@ def countNonZeroWeights(model):
         layer_count_total.update({name: total_params})
         nonzero += nz_count
         total += total_params
-        print(f'{name:20} | nonzeros = {nz_count:7} / {total_params:7} ({100 * nz_count / total_params:6.2f}%) | total_pruned = {total_params - nz_count :7} | shape = {tensor.shape}')
-    print(f'alive: {nonzero}, pruned : {total - nonzero}, total: {total}, Compression rate : {total/nonzero:10.2f}x  ({100 * (total-nonzero) / total:6.2f}% pruned)')
+        #print(f'{name:20} | nonzeros = {nz_count:7} / {total_params:7} ({100 * nz_count / total_params:6.2f}%) | total_pruned = {total_params - nz_count :7} | shape = {tensor.shape}')
+    #print(f'alive: {nonzero}, pruned : {total - nonzero}, total: {total}, Compression rate : {total/nonzero:10.2f}x  ({100 * (total-nonzero) / total:6.2f}% pruned)')
     #print(layer_count_total)
     return nonzero, total, layer_count_alive, layer_count_total
 
@@ -48,10 +48,10 @@ def calc_BOPS(model, input_data_precision=32):
                 p = 0
             #assuming b_a is the output bitwidth of the last layer
             module_BOPS = m * n * k * k * (p * b_a * b_w + b_a + b_w + math.log2(n*k*k))
-            print("{} BOPS: {} = {}*{}*{}({}*{}*{} + {} + {} + {})".format(name, module_BOPS, m, n, k*k, p, b_a, b_w, b_a, b_w, math.log2(n*k*k)))
+            #print("{} BOPS: {} = {}*{}*{}({}*{}*{} + {} + {} + {})".format(name, module_BOPS, m, n, k*k, p, b_a, b_w, b_a, b_w, math.log2(n*k*k)))
             last_bit_width = b_w
             total_BOPS += module_BOPS
     scientific_notation = "{:.2e}".format(total_BOPS)
-    print("Total BOPS: {} = {}".format(total_BOPS, scientific_notation))
+    #print("Total BOPS: {} = {}".format(total_BOPS, scientific_notation))
     
     return total_BOPS
