@@ -1,4 +1,5 @@
 name: cifar10_pytorch_adaptive_search
+debug: true
 hyperparameters:
   learning_rate:
     type: log

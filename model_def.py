@@ -17,6 +17,10 @@ from determined import InvalidHP
 
 from models.CNV import CNV
 from models.losses import SqrHingeLoss
+from models.bops_counter import calc_bops
+
+from brevitas.export.onnx.generic.manager import BrevitasONNXManager
+from finn.util.inference_cost import inference_cost
 
 # Constants about the data set.
 IMAGE_SIZE = 32
@@ -44,6 +48,7 @@ class CIFARTrial(PyTorchTrial):
         # other when doing distributed training.
         self.download_directory = tempfile.mkdtemp()
 
+        # unwrap the model
         try: 
             net = CNV(weight_bit_width=self.context.get_hparam("weight_bit_width"),
                       act_bit_width=self.context.get_hparam("act_bit_width"),
@@ -74,6 +79,7 @@ class CIFARTrial(PyTorchTrial):
         except: 
             raise InvalidHP
 
+        self.model_cost = net.calculate_model_cost()
         self.model = self.context.wrap_model(net)
 
         self.optimizer = self.context.wrap_optimizer(torch.optim.Adam(
@@ -100,6 +106,7 @@ class CIFARTrial(PyTorchTrial):
 
         self.context.backward(loss)
         self.context.step_optimizer(self.optimizer)
+        
         return {"loss": loss, "train_error": 1.0 - accuracy, "train_accuracy": accuracy}
 
     def evaluate_batch(self, batch: TorchData) -> Dict[str, Any]:
@@ -116,8 +123,11 @@ class CIFARTrial(PyTorchTrial):
         labels_onehot.masked_fill_(labels_onehot == 0, -1)
         loss = self.criterion(output, labels_onehot)
 
+        bops = calc_bops(self.model)
         accuracy = accuracy_rate(output, labels)
-        return {"validation_loss": loss, "validation_accuracy": accuracy, "validation_error": 1.0 - accuracy}
+        validation_result = {"bops": bops, "validation_loss": loss, "validation_accuracy": accuracy, "validation_error": 1.0 - accuracy}
+        validation_result.update(self.model_cost)
+        return validation_result
 
     def build_training_data_loader(self) -> Any:
         train_transforms_list = [transforms.RandomCrop(32, padding=4),
