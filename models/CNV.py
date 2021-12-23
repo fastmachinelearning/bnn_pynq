@@ -51,6 +51,7 @@ class CNV(Module):
         self.conv_features = ModuleList()
         self.linear_features = ModuleList()
         self._model_cost = None
+        self._in_features_shape = (3, 32, 32)
 
         self.conv_features.append(
             QuantIdentity(  # for Q1.7 input format
@@ -84,7 +85,14 @@ class CNV(Module):
                 self.conv_features.append(MaxPool2d(kernel_size=pool_size))
 
         # do shape inference for dummy input (need min. batch=2)
-        x = torch.zeros(size=(2, 3, 32, 32))
+        x = torch.zeros(
+            size=(
+                2,
+                self._in_features_shape[0],
+                self._in_features_shape[1],
+                self._in_features_shape[2],
+            )
+        )
         for mod in self.conv_features:
             x = mod(x)
         x = x.view(x.shape[0], -1)
@@ -148,9 +156,9 @@ class CNV(Module):
                 cost_dict_path = "tmp_model_cost.json"
                 export_shape = (
                     1,
-                    1,
                     self._in_features_shape[0],
                     self._in_features_shape[1],
+                    self._in_features_shape[2],
                 )
                 BrevitasONNXManager.export(
                     self.cpu(),
