@@ -135,8 +135,6 @@ class CNV(Module):
                     # Remove values, which are not supported as determined.ai evaluation return values
                     del self._model_cost["discount_sparsity"]
                     del self._model_cost["unsupported"]
-                print("HERE IS THE MODEL COST")
-                print(self._model_cost)
                 return self._model_cost
             except Exception as e:
                 print("Received exception in model cost calculation. Skipping.")
