@@ -21,12 +21,17 @@
 # SOFTWARE.
 
 import torch
+import torch.nn as nn
 from torch.nn import Module, ModuleList, BatchNorm2d, MaxPool2d, BatchNorm1d
 
 from brevitas.nn import QuantConv2d, QuantIdentity, QuantLinear
 from brevitas.core.restrict_val import RestrictValueType
 from .tensor_norm import TensorNorm
 from .common import CommonWeightQuant, CommonActQuant
+from brevitas.export.onnx.generic.manager import BrevitasONNXManager
+
+from finn.util.inference_cost import inference_cost
+import json
 
 
 class CNV(Module):
@@ -37,6 +42,7 @@ class CNV(Module):
 
         self.conv_features = ModuleList()
         self.linear_features = ModuleList()
+        self._model_cost = None
 
         self.conv_features.append(QuantIdentity( # for Q1.7 input format
             act_quant=CommonActQuant,
@@ -95,8 +101,7 @@ class CNV(Module):
         for m in self.modules():
           if isinstance(m, QuantConv2d) or isinstance(m, QuantLinear):
             torch.nn.init.uniform_(m.weight.data, -1, 1)
-
-
+        
     def clip_weights(self, min_val, max_val):
         for mod in self.conv_features:
             if isinstance(mod, QuantConv2d):
@@ -113,6 +118,29 @@ class CNV(Module):
         for mod in self.linear_features:
             x = mod(x)
         return x
+
+    def calculate_model_cost(self):
+            # Calculate resource estimation for this particular model
+            try:
+                if self._model_cost is None:
+                    export_onnx_path = "tmp_model_export.onnx"
+                    final_onnx_path = "tmp_model_final.onnx"
+                    cost_dict_path = "tmp_model_cost.json"
+                    export_shape = (1, 1, self._in_features_shape[0], self._in_features_shape[1])
+                    BrevitasONNXManager.export(self.cpu(), input_t=torch.randn(export_shape), export_path=export_onnx_path)
+                    inference_cost(export_onnx_path, output_json=cost_dict_path, output_onnx=final_onnx_path,
+                                                      preprocess=True, discount_sparsity=False)
+                    with open(cost_dict_path, 'r') as f:
+                        self._model_cost = json.load(f)
+                    # Remove values, which are not supported as determined.ai evaluation return values
+                    del self._model_cost["discount_sparsity"]
+                    del self._model_cost["unsupported"]
+                return self._model_cost
+            except Exception as e:
+                print("Received exception in model cost calculation. Skipping.")
+                print("Exception is of type: ", type(e))
+                print("And reads: ", e)
+                return dict()
 
 
 def cnv(cfg):
