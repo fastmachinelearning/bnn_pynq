@@ -7,3 +7,4 @@ data
 cifar-10-batches-py
 state_dict.pth
 cnv_finn.onnx
+energyrunner

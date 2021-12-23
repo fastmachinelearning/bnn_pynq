@@ -51,7 +51,7 @@ class CNV(Module):
         self.conv_features = ModuleList()
         self.linear_features = ModuleList()
         self._model_cost = None
-        self._in_features_shape = (3, 32, 32)
+        self._in_features_shape = (in_ch, 32, 32)
 
         self.conv_features.append(
             QuantIdentity(  # for Q1.7 input format

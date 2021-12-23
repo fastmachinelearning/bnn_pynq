@@ -195,12 +195,14 @@ class CIFARTrial(PyTorchTrial):
             os.path.join(data_path, "y_labels.csv"),
             names=["file_name", "num_classes", "label"],
         )
-        X_test = np.zeros((len(df), 32, 32, 3))
+        X_test = np.zeros((len(df), IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS))
         y_test = np.zeros((len(df)))
         for i, (file_name, label) in enumerate(zip(df["file_name"], df["label"])):
             with open(os.path.join(data_path, file_name), "rb") as f:
                 image_bytes = f.read()
-                data = np.frombuffer(image_bytes, np.uint8).reshape(32, 32, 3)
+                data = np.frombuffer(image_bytes, np.uint8).reshape(
+                    IMAGE_SIZE, IMAGE_SIZE, NUM_CHANNELS
+                )
                 X_test[i, :, :, :] = data
                 y_test[i] = label
         X_test = np.moveaxis(X_test, -1, 1) / 255.0
