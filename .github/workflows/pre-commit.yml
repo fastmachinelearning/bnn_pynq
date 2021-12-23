@@ -1,14 +1,10 @@
 name: Pre-commit
 
-on:
-  pull_request:
-    branches: [ main, dev ]
-  push:
-    branches: [ main, dev ]
+on: pull_request
 
 jobs:
   lint:
-    name: Lint PR or Push to DEV
+    name: Lint PR
     runs-on: ubuntu-latest
 
     steps:
