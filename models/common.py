@@ -20,15 +20,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from dependencies import value
-
-from brevitas.inject import ExtendedInjector
-from brevitas.quant.solver import WeightQuantSolver, ActQuantSolver
 from brevitas.core.bit_width import BitWidthImplType
 from brevitas.core.quant import QuantType
-from brevitas.core.restrict_val import RestrictValueType, FloatToIntImplType
+from brevitas.core.restrict_val import FloatToIntImplType, RestrictValueType
 from brevitas.core.scaling import ScalingImplType
 from brevitas.core.zero_point import ZeroZeroPoint
+from brevitas.inject import ExtendedInjector
+from brevitas.quant.solver import ActQuantSolver, WeightQuantSolver
+from dependencies import value
 
 
 class CommonQuant(ExtendedInjector):
