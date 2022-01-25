@@ -108,6 +108,7 @@ class CIFARTrial(PyTorchTrial):
                       pool_size=self.context.get_hparam("pool_size"),
                       kern_size=self.context.get_hparam("kern_size"))
         except: 
+            print("Error has occurred")
             raise InvalidHP
         
         if "use_constraints" in self.hparams and self.hparams["use_constraints"]:
