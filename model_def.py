@@ -46,14 +46,18 @@ def apply_constraints(hparams, num_params):
 
     # Reject if num skip_connect >= 3 or <1 in either normal or reduce cell.
     if normal_skip_count >= 3 or reduce_skip_count >= 3:
+        print("First invalid execute")
         raise det.InvalidHP("too many skip_connect operations")
     if normal_skip_count == 0 or reduce_skip_count == 0:
+        print("Second invalid execute")
         raise det.InvalidHP("too few skip_connect operations")
     # Reject if fewer than 3 sep_conv_3x3 in normal cell.
     if normal_conv_count < 3:
+        print("Third invalid")
         raise det.InvalidHP("fewer than 3 sep_conv_3x3 operations in normal cell")
     # Reject if num_params > 4.5 million or < 2.5 million.
     if num_params < 2.5e6 or num_params > 4.5e6:
+        print("Fourth invalid")
         raise det.InvalidHP(
             "number of parameters in architecture is not between 2.5 and 4.5 million"
         )
