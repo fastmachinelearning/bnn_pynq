@@ -30,6 +30,33 @@ IN_BIT_WIDTH = 8
 
 TorchData = Union[Dict[str, torch.Tensor], Sequence[torch.Tensor], torch.Tensor]
 
+def apply_constraints(hparams, num_params):
+    normal_skip_count = 0
+    reduce_skip_count = 0
+    normal_conv_count = 0
+    for hp, val in hparams.items():
+        if val == "skip_connect":
+            if "normal" in hp:
+                normal_skip_count += 1
+            elif "reduce" in hp:
+                reduce_skip_count += 1
+        if val == "sep_conv_3x3":
+            if "normal" in hp:
+                normal_conv_count += 1
+
+    # Reject if num skip_connect >= 3 or <1 in either normal or reduce cell.
+    if normal_skip_count >= 3 or reduce_skip_count >= 3:
+        raise det.InvalidHP("too many skip_connect operations")
+    if normal_skip_count == 0 or reduce_skip_count == 0:
+        raise det.InvalidHP("too few skip_connect operations")
+    # Reject if fewer than 3 sep_conv_3x3 in normal cell.
+    if normal_conv_count < 3:
+        raise det.InvalidHP("fewer than 3 sep_conv_3x3 operations in normal cell")
+    # Reject if num_params > 4.5 million or < 2.5 million.
+    if num_params < 2.5e6 or num_params > 4.5e6:
+        raise det.InvalidHP(
+            "number of parameters in architecture is not between 2.5 and 4.5 million"
+        )
 
 def accuracy_rate(predictions: torch.Tensor, labels: torch.Tensor) -> float:
     """Return the accuracy rate based on dense predictions and sparse labels."""
@@ -78,6 +105,9 @@ class CIFARTrial(PyTorchTrial):
                       kern_size=self.context.get_hparam("kern_size"))
         except: 
             raise InvalidHP
+        
+        if "use_constraints" in self.hparams and self.hparams["use_constraints"]:
+            apply_constraints(self.hparams, size)
 
         self.model_cost = net.calculate_model_cost()
         self.model = self.context.wrap_model(net)
