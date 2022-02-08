@@ -81,6 +81,7 @@ class CIFARTrial(PyTorchTrial):
 
         # unwrap the model
         try: 
+            print("Initializing model")
             net = CNV(weight_bit_width=self.context.get_hparam("weight_bit_width"),
                       act_bit_width=self.context.get_hparam("act_bit_width"),
                       in_bit_width=IN_BIT_WIDTH,
