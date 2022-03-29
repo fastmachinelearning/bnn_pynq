@@ -1,0 +1,214 @@
+# MIT License
+#
+# Copyright (c) 2019 Xilinx
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+import json
+
+import torch
+from brevitas.core.restrict_val import RestrictValueType
+from brevitas.export.onnx.generic.manager import BrevitasONNXManager
+from brevitas.nn import QuantConv2d, QuantIdentity, QuantLinear
+from finn.util.inference_cost import inference_cost
+from torch.nn import BatchNorm1d, BatchNorm2d, MaxPool2d, Module, ModuleList
+
+from .common import CommonActQuant, CommonWeightQuant
+from .tensor_norm import TensorNorm
+
+
+class CNV(Module):
+    def __init__(
+        self,
+        num_classes,
+        weight_bit_width,
+        act_bit_width,
+        in_bit_width,
+        in_ch,
+        cnv_out_ch_stride_pool,
+        int_fc_feat,
+        pool_size,
+        kern_size,
+    ):
+        super(CNV, self).__init__()
+
+        self.conv_features = ModuleList()
+        self.linear_features = ModuleList()
+        self._model_cost = None
+        self._in_features_shape = (in_ch, 32, 32)
+
+        self.conv_features.append(
+            QuantIdentity(  # for Q1.7 input format
+                act_quant=CommonActQuant,
+                bit_width=in_bit_width,
+                min_val=-1.0,
+                max_val=1.0 - 2.0 ** (-7),
+                narrow_range=False,
+                restrict_scaling_type=RestrictValueType.POWER_OF_TWO,
+            )
+        )
+
+        for out_ch, stride, is_pool_enabled in cnv_out_ch_stride_pool:
+            self.conv_features.append(
+                QuantConv2d(
+                    kernel_size=kern_size,
+                    in_channels=in_ch,
+                    out_channels=out_ch,
+                    stride=stride,
+                    bias=False,
+                    weight_quant=CommonWeightQuant,
+                    weight_bit_width=weight_bit_width,
+                )
+            )
+            in_ch = out_ch
+            self.conv_features.append(BatchNorm2d(in_ch, eps=1e-4))
+            self.conv_features.append(
+                QuantIdentity(act_quant=CommonActQuant, bit_width=act_bit_width)
+            )
+            if is_pool_enabled:
+                self.conv_features.append(MaxPool2d(kernel_size=pool_size))
+
+        # do shape inference for dummy input (need min. batch=2)
+        x = torch.zeros(
+            size=(
+                2,
+                self._in_features_shape[0],
+                self._in_features_shape[1],
+                self._in_features_shape[2],
+            )
+        )
+        for mod in self.conv_features:
+            x = mod(x)
+        x = x.view(x.shape[0], -1)
+        in_features = x.shape[-1]
+        out_features = int_fc_feat[0][0]
+        int_fc_feat.insert(0, (in_features, out_features))
+
+        for in_features, out_features in int_fc_feat:
+            self.linear_features.append(
+                QuantLinear(
+                    in_features=in_features,
+                    out_features=out_features,
+                    bias=False,
+                    weight_quant=CommonWeightQuant,
+                    weight_bit_width=weight_bit_width,
+                )
+            )
+            self.linear_features.append(BatchNorm1d(out_features, eps=1e-4))
+            self.linear_features.append(
+                QuantIdentity(act_quant=CommonActQuant, bit_width=act_bit_width)
+            )
+
+        self.linear_features.append(
+            QuantLinear(
+                in_features=int_fc_feat[-1][1],
+                out_features=num_classes,
+                bias=False,
+                weight_quant=CommonWeightQuant,
+                weight_bit_width=weight_bit_width,
+            )
+        )
+        self.linear_features.append(TensorNorm())
+
+        for m in self.modules():
+            if isinstance(m, QuantConv2d) or isinstance(m, QuantLinear):
+                torch.nn.init.uniform_(m.weight.data, -1, 1)
+
+    def clip_weights(self, min_val, max_val):
+        for mod in self.conv_features:
+            if isinstance(mod, QuantConv2d):
+                mod.weight.data.clamp_(min_val, max_val)
+        for mod in self.linear_features:
+            if isinstance(mod, QuantLinear):
+                mod.weight.data.clamp_(min_val, max_val)
+
+    def forward(self, x):
+        x = 2.0 * x - torch.tensor([1.0], device=x.device)
+        for mod in self.conv_features:
+            x = mod(x)
+        x = x.view(x.shape[0], -1)
+        for mod in self.linear_features:
+            x = mod(x)
+        return x
+
+    def calculate_model_cost(self):
+        # Calculate resource estimation for this particular model
+        try:
+            if self._model_cost is None:
+                export_onnx_path = "tmp_model_export.onnx"
+                final_onnx_path = "tmp_model_final.onnx"
+                cost_dict_path = "tmp_model_cost.json"
+                export_shape = (
+                    1,
+                    self._in_features_shape[0],
+                    self._in_features_shape[1],
+                    self._in_features_shape[2],
+                )
+                BrevitasONNXManager.export(
+                    self.cpu(),
+                    input_t=torch.randn(export_shape),
+                    export_path=export_onnx_path,
+                )
+                inference_cost(
+                    export_onnx_path,
+                    output_json=cost_dict_path,
+                    output_onnx=final_onnx_path,
+                    preprocess=True,
+                    discount_sparsity=False,
+                )
+                with open(cost_dict_path, "r") as f:
+                    self._model_cost = json.load(f)
+                # Remove values, which are not supported by determined.ai
+                del self._model_cost["discount_sparsity"]
+                del self._model_cost["unsupported"]
+            return self._model_cost
+        except Exception as e:
+            print("Received exception in model cost calculation. Skipping.")
+            print("Exception is of type: ", type(e))
+            print("And reads: ", e)
+            return dict()
+
+
+def cnv(cfg):
+    weight_bit_width = cfg.getint("QUANT", "WEIGHT_BIT_WIDTH")
+    act_bit_width = cfg.getint("QUANT", "ACT_BIT_WIDTH")
+    in_bit_width = cfg.getint("QUANT", "IN_BIT_WIDTH")
+    num_classes = cfg.getint("MODEL", "NUM_CLASSES")
+    in_channels = cfg.getint("MODEL", "IN_CHANNELS")
+    cnv_out_ch_stride_pool = cfg.get("MODEL", "CNV_OUT_CH_STRIDE_POOL")
+    int_fc_feat = cfg.get("MODEL", "INTERMEDIATE_FC_FEATURES")
+    cnv_out_ch_stride_pool = [
+        eval(triplet) for triplet in cnv_out_ch_stride_pool.split("\n")
+    ]
+    int_fc_feat = [eval(pair) for pair in int_fc_feat.split("\n")]
+    pool_size = cfg.getint("MODEL", "POOL_SIZE")
+    kern_size = cfg.getint("MODEL", "KERNEL_SIZE")
+
+    net = CNV(
+        weight_bit_width=weight_bit_width,
+        act_bit_width=act_bit_width,
+        in_bit_width=in_bit_width,
+        num_classes=num_classes,
+        in_ch=in_channels,
+        cnv_out_ch_stride_pool=cnv_out_ch_stride_pool,
+        int_fc_feat=int_fc_feat,
+        pool_size=pool_size,
+        kern_size=kern_size,
+    )
+    return net
