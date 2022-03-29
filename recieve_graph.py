@@ -2,7 +2,6 @@ from determined.experimental import client
 from determined.common.experimental import trial
 import matplotlib.pyplot as plt
 
-
 errs = 0 
 
 # Gets a list of the top 100 trials and sorting by the BEST_VALIDATION_METRIC which is currently 
@@ -31,14 +30,15 @@ for t in trial_list:
         errs = errs + 1 
 
 # Make plot
-fig, ax = plt.subplots()
-ax.set(xlabel='BOPS', ylabel='accuracy',
-       title='BOPS vs accuracy')
+plt.xlabel('BOPS')
+plt.ylabel('Accuracy')
+plt.title('BOPS vs Accuracy')
 
 # Creates a scatter plot for each trial, x-axis representing the binary operations 
 #   and the y-axis representing the accuracy
 for thing in list_of_pairs:
-    ax.scatter(thing[1],thing[2])
+    plt.scatter(thing[1],thing[2])
+
 plt.xscale("log")
-# Saves the plot in a file called best.png. If needed, this can be modified 
-fig.savefig("best.png")
+# Saves the plot in a file called BOPSvAccuracy.png. If needed, this can be modified 
+plt.savefig("BOPSvAccuracy.png")
