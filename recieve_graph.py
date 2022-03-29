@@ -14,15 +14,11 @@ list_of_pairs = []
 for t in trial_list:
     try:
         checks = t.select_checkpoint(latest=True)
-
-
         bop_number = checks.validation['metrics']['validationMetrics']['bops']
         accuracy = checks.validation['metrics']['validationMetrics']['validation_accuracy']
         pair = (t,bop_number,accuracy)
         list_of_pairs.append(pair)
-
     except:
-
         errs = errs + 1 
 
 
