@@ -81,7 +81,6 @@ class CIFARTrial(PyTorchTrial):
 
         # unwrap the model
         try: 
-            print("Initializing model")
             net = CNV(weight_bit_width=self.context.get_hparam("weight_bit_width"),
                       act_bit_width=self.context.get_hparam("act_bit_width"),
                       in_bit_width=IN_BIT_WIDTH,
@@ -109,7 +108,6 @@ class CIFARTrial(PyTorchTrial):
                       pool_size=self.context.get_hparam("pool_size"),
                       kern_size=self.context.get_hparam("kern_size"))
         except Exception as e:
-            print(e)
             raise InvalidHP
         
         if "use_constraints" in self.hparams and self.hparams["use_constraints"]:
