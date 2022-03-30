@@ -8,7 +8,7 @@ hyperparameters:
     maxval: 0
     base: 10.0
   learning_rate_decay: 0
-  cnv_out_ch_0: 
+  cnv_out_ch_0:
     type: categorical
     vals:
       - 32
@@ -23,12 +23,12 @@ hyperparameters:
       - 2
       - 3
       - 4
-  cnv_pool_0: 
+  cnv_pool_0:
     type: categorical
-    vals: 
+    vals:
       - True
       - False
-  cnv_out_ch_1:     
+  cnv_out_ch_1:
     type: categorical
     vals:
       - 32
@@ -43,7 +43,7 @@ hyperparameters:
       - 2
       - 3
       - 4
-  cnv_pool_1: 
+  cnv_pool_1:
     type: categorical
     vals:
       - True
@@ -88,13 +88,13 @@ hyperparameters:
     vals:
       - True
       - False
-  cnv_out_ch_4: 
+  cnv_out_ch_4:
     type: categorical
     vals:
       - 32
       - 64
       - 128
-      - 256  
+      - 256
       - 512
   cnv_stride_4:
     type: categorical
@@ -103,12 +103,12 @@ hyperparameters:
       - 2
       - 3
       - 4
-  cnv_pool_4: 
+  cnv_pool_4:
     type: categorical
     vals:
       - True
       - False
-  cnv_out_ch_5: 
+  cnv_out_ch_5:
     type: categorical
     vals:
       - 32
@@ -137,7 +137,7 @@ hyperparameters:
       - 128
       - 256
       - 512
-  int_fc_feat_2: 
+  int_fc_feat_2:
     type: categorical
     vals:
       - 16
@@ -146,24 +146,24 @@ hyperparameters:
       - 128
       - 256
       - 512
-  weight_bit_width: 
+  weight_bit_width:
     type: categorical
     vals:
       - 1
       - 2
       - 4
-  act_bit_width: 
+  act_bit_width:
     type: categorical
     vals:
       - 1
       - 2
       - 4
-  pool_size: 
+  pool_size:
     type: categorical
     vals:
       - 2
       - 4
-  kern_size: 
+  kern_size:
     type: categorical
     vals:
       - 1
