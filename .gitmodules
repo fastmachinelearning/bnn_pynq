@@ -1,0 +1,3 @@
+[submodule "energyrunner"]
+	path = energyrunner
+	url = https://github.com/eembc/energyrunner

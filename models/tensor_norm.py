@@ -33,8 +33,8 @@ class TensorNorm(nn.Module):
         self.momentum = momentum
         self.weight = nn.Parameter(torch.rand(1))
         self.bias = nn.Parameter(torch.rand(1))
-        self.register_buffer('running_mean', torch.zeros(1))
-        self.register_buffer('running_var', torch.ones(1))
+        self.register_buffer("running_mean", torch.zeros(1))
+        self.register_buffer("running_var", torch.ones(1))
         self.reset_running_stats()
 
     def reset_running_stats(self):
@@ -48,9 +48,15 @@ class TensorNorm(nn.Module):
             mean = x.mean()
             unbias_var = x.var(unbiased=True)
             biased_var = x.var(unbiased=False)
-            self.running_mean = (1 - self.momentum) * self.running_mean + self.momentum * mean.detach()
-            self.running_var = (1 - self.momentum) * self.running_var + self.momentum * unbias_var.detach()
+            self.running_mean = (
+                1 - self.momentum
+            ) * self.running_mean + self.momentum * mean.detach()
+            self.running_var = (
+                1 - self.momentum
+            ) * self.running_var + self.momentum * unbias_var.detach()
             inv_std = 1 / (biased_var + self.eps).pow(0.5)
             return (x - mean) * inv_std * self.weight + self.bias
         else:
-            return ((x - self.running_mean) / (self.running_var + self.eps).pow(0.5)) * self.weight + self.bias
+            return (
+                (x - self.running_mean) / (self.running_var + self.eps).pow(0.5)
+            ) * self.weight + self.bias
