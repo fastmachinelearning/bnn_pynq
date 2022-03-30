@@ -1,51 +1,107 @@
+import os
+
 import matplotlib.pyplot as plt
-from determined.common.experimental import trial
+import mplhep as hep
+import numpy as np
 from determined.experimental import client
+
+plt.style.use(hep.style.ROOT)
+
 
 errs = 0
 
-# Gets a list of the top 100 trials and sorting by
-# the BEST_VALIDATION_METRIC which is currently
-# defined as the validation error
-trial_list = client.get_experiment(37).get_trials(
-    sort_by=trial.TrialSortBy.BEST_VALIDATION_METRIC
+# Gets a list of all the trials for a given experiment
+experiment = 37
+os.system(
+    "det experiment list-trials {experiment} | grep COMPLETED > trials.txt".format(
+        experiment=experiment
+    )
 )
-list_of_pairs = []
-for t in trial_list:
+with open("trials.txt") as f:
+    trial_ids = [int(line.split()[0]) for line in f.readlines()]
+
+metrics = {}
+for t in trial_ids:
+    trial = client.get_trial(t)
     try:
-        # Recieved the latest checkpoint from each trial
-        checks = t.select_checkpoint(latest=True)
+        # Recieves the top checkpoint from each trial
+        checks = trial.top_checkpoint()
 
-        # Gets the current binary operation count from the checkpoint
-        bop_number = checks.validation["metrics"]["validationMetrics"]["bops"]
+        # Gets the validation metrics from the checkpoint
+        for key in checks.validation["metrics"]["validationMetrics"].keys():
+            if key not in metrics.keys():
+                metrics[key] = []
+            metrics[key].append(checks.validation["metrics"]["validationMetrics"][key])
 
-        # Gets the current validation accuracy from the checkpoint
-        accuracy = checks.validation["metrics"]["validationMetrics"][
-            "validation_accuracy"
-        ]
-
-        # Creates a tuple containing both the binary operation count
-        # and the accuracy
-        pair = (t, bop_number, accuracy)
-
-        # Appends this tuple to a list of tuples containing each
-        # trial's binary operation count and validation accuracy
-        list_of_pairs.append(pair)
+        # Gets the hyperparameters from the checkpoint
+        for key in checks.hparams.keys():
+            if key not in metrics.keys():
+                metrics[key] = []
+            metrics[key].append(checks.hparams[key])
     except AssertionError:
         # Increments the error count. If needed, one can print this number out
         errs = errs + 1
 
-# Make plot
-plt.xlabel("BOPS")
-plt.ylabel("Accuracy")
-plt.title("BOPS vs Accuracy")
-
 # Creates a scatter plot for each trial,
-# x-axis representing the binary operations
+# x-axis representing the hardware cost
 # and the y-axis representing the accuracy
-for thing in list_of_pairs:
-    plt.scatter(thing[1], thing[2])
+axis_label = {"total_bops": "BOPs", "total_mem_w_bits": "Total weight bits"}
 
-plt.xscale("log")
-# Saves the plot in a file called BOPSvAccuracy.png. If needed, this can be modified
-plt.savefig("BOPSvAccuracy.png")
+
+# CNV-W1A1 (val. acc. after 100 epochs: exp #60)
+reference = {
+    "total_bops": 70347776.0,
+    "total_mem_w_bits": 1542848.0,
+    "validation_accuracy": 0.7929,
+}
+
+for key in ["total_bops", "total_mem_w_bits"]:
+    cost = np.array(metrics[key])
+    accuracy = np.array(metrics["validation_accuracy"])
+    act_bits = np.array(metrics["act_bit_width"])
+    weight_bits = np.array(metrics["weight_bit_width"])
+    mask_w1a1 = np.logical_and(weight_bits == 1, act_bits == 1)
+    mask_w1a2 = np.logical_and(weight_bits == 1, act_bits == 2)
+    mask_w2a1 = np.logical_and(weight_bits == 2, act_bits == 1)
+    mask_w2a2 = np.logical_and(weight_bits == 2, act_bits == 2)
+    cmap = np.array(["blue", "orange", "green", "red"])
+    plt.figure()
+    plt.scatter(
+        cost[mask_w1a1],
+        accuracy[mask_w1a1],
+        c=cmap[0],
+        label="1-bit weights, 1-bit act.",
+    )
+    plt.scatter(
+        cost[mask_w1a2],
+        accuracy[mask_w1a2],
+        c=cmap[1],
+        label="1-bit weights, 2-bit act.",
+    )
+    plt.scatter(
+        cost[mask_w2a1],
+        accuracy[mask_w2a1],
+        c=cmap[2],
+        label="2-bit weights, 1-bit act.",
+    )
+    plt.scatter(
+        cost[mask_w2a2],
+        accuracy[mask_w2a2],
+        c=cmap[3],
+        label="2-bit weights, 2-bit act.",
+    )
+    plt.scatter(
+        reference[key],
+        reference["validation_accuracy"],
+        label="CNV-W1A1",
+        marker="*",
+        c="black",
+        s=160,
+    )
+    plt.xlabel(axis_label[key])
+    plt.ylabel("Test accuracy")
+    plt.legend()
+    plt.xscale("log")
+    # Saves the plot
+    plt.savefig("{metric}_accuracy.png".format(metric=key))
+    plt.savefig("{metric}_accuracy.pdf".format(metric=key))
