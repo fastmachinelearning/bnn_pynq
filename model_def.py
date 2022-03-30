@@ -16,10 +16,6 @@ from torchvision import transforms
 from models.bops_counter import calc_bops
 from models.CNV import CNV
 from models.losses import SqrHingeLoss
-from models.bops_counter import calc_bops
-
-from brevitas.export.onnx.generic.manager import BrevitasONNXManager
-from finn.util.inference_cost import inference_cost
 
 # Constants about the data set.
 IMAGE_SIZE = 32
@@ -28,6 +24,7 @@ NUM_CLASSES = 10
 IN_BIT_WIDTH = 8
 
 TorchData = Union[Dict[str, torch.Tensor], Sequence[torch.Tensor], torch.Tensor]
+
 
 def apply_constraints(hparams, num_params):
     normal_skip_count = 0
@@ -46,20 +43,21 @@ def apply_constraints(hparams, num_params):
     # Reject if num skip_connect >= 3 or <1 in either normal or reduce cell.
     if normal_skip_count >= 3 or reduce_skip_count >= 3:
         print("First invalid execute")
-        raise det.InvalidHP("too many skip_connect operations")
+        raise InvalidHP("too many skip_connect operations")
     if normal_skip_count == 0 or reduce_skip_count == 0:
         print("Second invalid execute")
-        raise det.InvalidHP("too few skip_connect operations")
+        raise InvalidHP("too few skip_connect operations")
     # Reject if fewer than 3 sep_conv_3x3 in normal cell.
     if normal_conv_count < 3:
         print("Third invalid")
-        raise det.InvalidHP("fewer than 3 sep_conv_3x3 operations in normal cell")
+        raise InvalidHP("fewer than 3 sep_conv_3x3 operations in normal cell")
     # Reject if num_params > 4.5 million or < 2.5 million.
     if num_params < 2.5e6 or num_params > 4.5e6:
         print("Fourth invalid")
-        raise det.InvalidHP(
+        raise InvalidHP(
             "number of parameters in architecture is not between 2.5 and 4.5 million"
         )
+
 
 def accuracy_rate(predictions: torch.Tensor, labels: torch.Tensor) -> float:
     """Return the accuracy rate based on dense predictions and sparse labels."""
@@ -136,9 +134,9 @@ class CIFARTrial(PyTorchTrial):
             print("Exception is of type: ", type(e))
             print("And reads: ", e)
             raise InvalidHP
-        
-        if "use_constraints" in self.hparams and self.hparams["use_constraints"]:
-            apply_constraints(self.hparams, size)
+
+        # if "use_constraints" in self.hparams and self.hparams["use_constraints"]:
+        #     apply_constraints(self.hparams, size)
 
         self.model_cost = net.calculate_model_cost()
         self.model = self.context.wrap_model(net)
