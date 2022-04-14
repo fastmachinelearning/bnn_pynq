@@ -54,8 +54,9 @@ reference = {
     "total_mem_w_bits": 1542848.0,
     "validation_accuracy": 0.7929,
 }
+metrics["inference_cost"] = 0.5 * metrics["total_bops"]/reference["total_bops"] + 0.5 * metrics["total_mem_w_bits"]/reference["total_mem_w_bits"]
 
-for key in ["total_bops", "total_mem_w_bits"]:
+for key in ["total_bops", "total_mem_w_bits","inference_cost"]:
     cost = np.array(metrics[key])
     accuracy = np.array(metrics["validation_accuracy"])
     act_bits = np.array(metrics["act_bit_width"])
