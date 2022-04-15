@@ -45,7 +45,11 @@ for t in trial_ids:
 # Creates a scatter plot for each trial,
 # x-axis representing the hardware cost
 # and the y-axis representing the accuracy
-axis_label = {"total_bops": "BOPs", "total_mem_w_bits": "Total weight bits"}
+axis_label = {
+    "total_bops": "BOPs",
+    "total_mem_w_bits": "Total weight bits",
+    "inference_cost": "Inference cost",
+}
 
 
 # CNV-W1A1 (val. acc. after 100 epochs: exp #60)
@@ -53,9 +57,21 @@ reference = {
     "total_bops": 70347776.0,
     "total_mem_w_bits": 1542848.0,
     "validation_accuracy": 0.7929,
+    "inference_cost": 1,
 }
 
-for key in ["total_bops", "total_mem_w_bits"]:
+# Creates two lists to divide the total bops list and total_mem_w_bits by a reference
+list1 = [x / reference["total_bops"] for x in metrics["total_bops"]]
+list2 = [x / reference["total_mem_w_bits"] for x in metrics["total_mem_w_bits"]]
+
+metrics["inference_cost"] = []
+# Combines both lists together
+for (item1, item2) in zip(list1, list2):
+    # This formula is arbitrary and can be changed in the future. However the idea
+    # for this is that cnv-1w1a has an inference score of 1
+    metrics["inference_cost"].append(0.5 * item1 + 0.5 * item2)
+
+for key in ["total_bops", "total_mem_w_bits", "inference_cost"]:
     cost = np.array(metrics[key])
     accuracy = np.array(metrics["validation_accuracy"])
     act_bits = np.array(metrics["act_bit_width"])
